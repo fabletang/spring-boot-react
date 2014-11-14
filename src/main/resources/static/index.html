@@ -1,0 +1,57 @@
+<html>
+<head>
+    <script src="http://fb.me/react-0.12.0.js"></script>
+    <script src="http://fb.me/JSXTransformer-0.12.0.js"></script>
+    <script src="http://code.jquery.com/jquery-1.10.0.min.js"></script>
+    <!--<script src="http://cdnjs.cloudflare.com/ajax/libs/showdown/0.3.1/showdown.min.js"></script>-->
+</head>
+<body>
+
+<div id="content"></div>
+
+<script type="text/jsx">
+var Greeting = React.createClass({
+    getGreetingFromServer: function() {
+        $.ajax({
+            url: this.props.url,
+            data: { name: $("#nameField").val()} ,
+            success: function(data) {
+                this.setState({data: data});
+            }.bind(this)
+        });
+    },
+    getInitialState: function() {
+        return {data: []};
+    },
+    componentDidMount: function() {
+        this.getGreetingFromServer();
+        //setInterval(this.getGreetingFromServer, this.props.pollInterval);
+    },
+    onChange: function(e) {
+        $.ajax({
+            url: this.props.url,
+            data: { name: $("#nameField").val() },
+            success: function(data) {
+                this.setState({data: data});
+            }.bind(this)
+        });
+    },
+    render: function() {
+        return (
+            <div>
+                <input type="text" id="nameField" name="nameField" onChange={this.onChange()} />
+                <h2>{this.state.data.content} </h2>
+            </div>
+            );
+    }
+});
+React.render(
+  <Greeting url="/sup-world" pollInterval="1000" />,
+  document.getElementById('content')
+);
+
+
+
+</script>
+</body>
+</html>
