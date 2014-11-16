@@ -6,11 +6,8 @@ import org.springframework.boot.builder.SpringApplicationBuilder;
 import org.springframework.boot.context.web.SpringBootServletInitializer;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.core.env.SimpleCommandLinePropertySource;
 
-/**
- * Hello world!
- *
- */
 
 @Configuration
 @EnableAutoConfiguration
@@ -22,8 +19,11 @@ public class App extends SpringBootServletInitializer
         SpringApplication app = new SpringApplication(App.class);
         //app.setShowBanner(false);
 
-        //SimpleCommandLinePropertySource source = new SimpleCommandLinePropertySource(args);
+        SimpleCommandLinePropertySource source = new SimpleCommandLinePropertySource(args);
 
+        // Check if the selected profile has been set as argument.
+        // if not the development profile will be added
+        addDefaultProfile(app, source);
         // Check if the selected profile has been set as argument.
         // if not the development profile will be added
         //addDefaultProfile(app, source);
@@ -35,5 +35,11 @@ public class App extends SpringBootServletInitializer
     protected SpringApplicationBuilder configure(
             SpringApplicationBuilder application) {
         return application.sources(App.class);
+    }
+
+    private static void addDefaultProfile(SpringApplication app, SimpleCommandLinePropertySource source) {
+        if (!source.containsProperty("spring.profiles.active")) {
+            app.setAdditionalProfiles(Constants.SPRING_PROFILE_DEVELOPMENT);
+        }
     }
 }
