@@ -2,9 +2,12 @@ package edu.iastate.controller;
 
 
 import edu.iastate.data.Course;
+import edu.iastate.data.Department;
 import edu.iastate.repository.CourseRepository;
+import edu.iastate.repository.DepartmentRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
@@ -19,6 +22,8 @@ public class CourseController {
 
     @Autowired
     private CourseRepository courseRepository;
+    @Autowired
+    private DepartmentRepository departmentRepository;
 
     @RequestMapping(method= RequestMethod.GET)
     public @ResponseBody
@@ -41,5 +46,12 @@ public class CourseController {
     {
         return courseRepository.findByBaseQuery(term, deptCode);
         //return courseRepository.findByDeptCode(deptCode);
+    }
+
+    @RequestMapping(value="/dept", method= RequestMethod.GET)
+    public @ResponseBody
+    List<Department> getDepartments()
+    {
+        return departmentRepository.findAll(new Sort(Sort.Direction.ASC, "departmentTitle"));
     }
 }

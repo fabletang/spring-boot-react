@@ -1,11 +1,9 @@
 package edu.iastate.config;
 
 import edu.iastate.Constants;
-import edu.iastate.data.Course;
-import edu.iastate.data.Section;
-import edu.iastate.data.SectionTime;
-import edu.iastate.data.Semester;
+import edu.iastate.data.*;
 import edu.iastate.repository.CourseRepository;
+import edu.iastate.repository.DepartmentRepository;
 import edu.iastate.repository.SemesterRepository;
 import org.apache.commons.lang3.StringUtils;
 import org.joda.time.LocalDate;
@@ -19,10 +17,8 @@ import javax.sql.DataSource;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.sql.*;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.sql.Date;
+import java.util.*;
 
 @Configuration
 public class Db2Import {
@@ -32,6 +28,9 @@ public class Db2Import {
 
     @Autowired
     private CourseRepository courseRepository;
+
+    @Autowired
+    private DepartmentRepository departmentRepository;
 
     @Autowired
     private SemesterRepository semesterRepository;
@@ -59,6 +58,8 @@ public class Db2Import {
 
         try {
             courseRepository.deleteAll();
+            semesterRepository.deleteAll();
+            departmentRepository.deleteAll();
 
             String semesterSQL = "Select Distinct DATETBL.SEM_CD, " +
                     "DATETBL.SEM_CCYY, " +
@@ -157,6 +158,7 @@ public class Db2Import {
             Integer courseId = 0;
             Map<Map<String, String>, Integer> courseIdMap = new HashMap<Map<String, String>, Integer>();
             Map<Integer, Course> courseMap = new HashMap<Integer, Course>();
+            Set<Department> departments = new HashSet<Department>();
             while (courseResult.next())
             {
                 courseId++;
@@ -165,9 +167,9 @@ public class Db2Import {
                 Integer semYY = courseResult.getInt("SEM_CCYY");
                 String deptCode = courseResult.getString("OFFER_DEPT_ABRVN");
                 String classNumber = courseResult.getString("CRSE");
-                String departmentTitle = courseResult.getString("DEPT_TITLE");
-                String classComments = courseResult.getString("CRSE_CMNT");
-                String classTitle = courseResult.getString("CRSE_TITLE");
+                String departmentTitle = courseResult.getString("DEPT_TITLE").trim();
+                String classComments = courseResult.getString("CRSE_CMNT").trim();
+                String classTitle = courseResult.getString("CRSE_TITLE").trim();
                 String preReq = courseResult.getString("PRE_REQ");
                 String dvrstyIntl = courseResult.getString("DVRST_INTNL_CD");
                 String nightExam = courseResult.getString("NIGHT_EXAM");
@@ -196,6 +198,7 @@ public class Db2Import {
                 idComposite.put("course", classNumber);
                 idComposite.put("deptCode", deptCode);
 
+                departments.add(new Department(deptCode, departmentTitle));
                 Course course = new Course();
                 //course.setId(courseId);
                 course.setDeptCode(deptCode);
@@ -284,18 +287,18 @@ public class Db2Import {
                 Date stopDate = sectionResult.getDate("SESS_STOP_DATEDB");
                 String specialFeeFlag = sectionResult.getString("SPECIAL_FEE");
                 Integer specialFee = sectionResult.getInt("SPCL_FEE_AMT");
-                String syllabusUrl = sectionResult.getString("SYLBS_URL");
-                String courseUrl = sectionResult.getString("CRSE_URL");
+                String syllabusUrl = sectionResult.getString("SYLBS_URL").trim();
+                String courseUrl = sectionResult.getString("CRSE_URL").trim();
 
-                String sectCmnt = sectionResult.getString("SECT_CMNT");
+                String sectCmnt = sectionResult.getString("SECT_CMNT").trim();
                 String sectSpecialPermissions = sectionResult.getString("SECT_SPCL_PRMSN");
                 String meetDate = sectionResult.getString("MEET_DATE");
                 String workshopFee = sectionResult.getString("WKSHP_FEE");
                 String ocLocation = sectionResult.getString("OC_LOC");
                 String deliveryType = sectionResult.getString("DLVRY_TYPE");
-                String partialSemesterComment = sectionResult.getString("PART_SEM_CMNT");
+                String partialSemesterComment = sectionResult.getString("PART_SEM_CMNT").trim();
                 String secondaryDeliveryType = sectionResult.getString("SCNDRY_DLVRY_TYPE");
-                String computerRequirementUrl = sectionResult.getString("CMPTR_REQMT_URL");
+                String computerRequirementUrl = sectionResult.getString("CMPTR_REQMT_URL").trim();
                 String referenceNumber = sectionResult.getString("SECT_REF_NUM");
 
 
@@ -453,6 +456,10 @@ public class Db2Import {
 
             for (Course tmpCourse : courseMap.values()) {
                 courseRepository.save(tmpCourse);
+            }
+
+            for (Department tempDept : departments) {
+                departmentRepository.save(tempDept);
             }
 
             conn.close();
